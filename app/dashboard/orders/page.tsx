@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Plus, ShoppingCart } from "lucide-react"
+import { Plus, ShoppingCart, Download } from "lucide-react"
 import { format } from "date-fns"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
+import { exportToCSV } from "@/lib/export-csv"
 
 type Order = {
   id: string
@@ -54,6 +55,21 @@ export default function OrdersPage() {
     }
   }
 
+  const handleExportCSV = () => {
+    const exportData = orders.map(order => ({
+      'Order ID': order.id.slice(0, 8),
+      'Client Name': order.client_name,
+      'Order Date': format(new Date(order.order_date), "MMM dd, yyyy"),
+      'Number of Items': order.order_items?.length || 0,
+      'Status': order.status
+    }))
+    exportToCSV(exportData, 'orders')
+    toast({
+      title: "Success",
+      description: "Orders exported to CSV",
+    })
+  }
+
   if (loading) {
     return (
       <div className="p-8">
@@ -72,12 +88,23 @@ export default function OrdersPage() {
           <h1 className="text-3xl font-bold text-gray-900">Orders</h1>
           <p className="text-gray-500 mt-1">View and manage all orders</p>
         </div>
-        <Link href="/dashboard/orders/new">
-          <Button className="w-full md:w-auto">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Order
+        <div className="flex gap-2 w-full md:w-auto">
+          <Button 
+            onClick={handleExportCSV} 
+            variant="outline" 
+            className="flex-1 md:flex-initial"
+            disabled={orders.length === 0}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export CSV
           </Button>
-        </Link>
+          <Link href="/dashboard/orders/new" className="flex-1 md:flex-initial">
+            <Button className="w-full">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Order
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <Card>

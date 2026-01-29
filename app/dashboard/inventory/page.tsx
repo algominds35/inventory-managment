@@ -10,7 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
-import { Plus, Search, Pencil, Trash2, Box } from "lucide-react"
+import { Plus, Search, Pencil, Trash2, Box, Download } from "lucide-react"
+import { exportToCSV } from "@/lib/export-csv"
 
 type SKU = {
   id: string
@@ -190,6 +191,21 @@ export default function InventoryPage() {
     return { label: "In Stock", variant: "success" as const }
   }
 
+  const handleExportCSV = () => {
+    const exportData = filteredSKUs.map(sku => ({
+      'SKU Name': sku.sku_name,
+      'Current Quantity': sku.current_quantity,
+      'Low Stock Threshold': sku.low_stock_threshold,
+      'Status': getStockStatus(sku.current_quantity, sku.low_stock_threshold).label,
+      'Created At': new Date(sku.created_at).toLocaleDateString()
+    }))
+    exportToCSV(exportData, 'inventory')
+    toast({
+      title: "Success",
+      description: "Inventory exported to CSV",
+    })
+  }
+
   if (loading) {
     return (
       <div className="p-8">
@@ -208,10 +224,21 @@ export default function InventoryPage() {
           <h1 className="text-3xl font-bold text-gray-900">Inventory</h1>
           <p className="text-gray-500 mt-1">Manage your SKUs and stock levels</p>
         </div>
-        <Button onClick={() => handleOpenModal()} className="w-full md:w-auto">
-          <Plus className="h-4 w-4 mr-2" />
-          Add New SKU
-        </Button>
+        <div className="flex gap-2 w-full md:w-auto">
+          <Button 
+            onClick={handleExportCSV} 
+            variant="outline" 
+            className="flex-1 md:flex-initial"
+            disabled={filteredSKUs.length === 0}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export CSV
+          </Button>
+          <Button onClick={() => handleOpenModal()} className="flex-1 md:flex-initial">
+            <Plus className="h-4 w-4 mr-2" />
+            Add New SKU
+          </Button>
+        </div>
       </div>
 
       <Card>
